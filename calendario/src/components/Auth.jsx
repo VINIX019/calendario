@@ -2,7 +2,10 @@ import { useState } from "react";
 import { supabase } from "../supabaseClient";
 
 export default function Auth() {
-  const [email, setEmail] = useState("");
+  // pré-preenche com o último email usado neste dispositivo (só o email, nunca a senha)
+  const [email, setEmail] = useState(
+    () => localStorage.getItem("ultimoEmail") || ""
+  );
   const [senha, setSenha] = useState("");
   const [erro, setErro] = useState("");
   const [carregando, setCarregando] = useState(false);
@@ -10,11 +13,16 @@ export default function Auth() {
   async function entrar() {
     setErro("");
     setCarregando(true);
+    const emailLimpo = email.trim();
     const { error } = await supabase.auth.signInWithPassword({
-      email: email.trim(),
+      email: emailLimpo,
       password: senha,
     });
-    if (error) setErro("Email ou senha incorretos.");
+    if (error) {
+      setErro("Email ou senha incorretos.");
+    } else {
+      localStorage.setItem("ultimoEmail", emailLimpo); // lembra só após login válido
+    }
     setCarregando(false);
   }
 
